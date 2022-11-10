@@ -1,6 +1,8 @@
 import numpy as np
 import curses
 
+KEY_MAP = {ord("w"): [-1, 0], ord("s"): [1, 0], ord("a"): [0, -1], ord("d"): [0, 1]}
+
 def plus(l1, l2):
     return [l1[0] + l2[0], l1[1] + l2[1]]
 
@@ -11,6 +13,7 @@ class Snake:
         self.head = [7, 7]
         self.dir = [1, 0]
         
+        # generate initial snake tail
         self.tail = [plus(self.head, self.dir)]
         for i in range(len - 1):
             self.tail.append(plus(self.tail[-1], self.dir))
@@ -18,10 +21,9 @@ class Snake:
         self.char = '▖'
 
     def move(self, key, board):
-        moves = {ord("w"): [-1, 0], ord("s"): [1, 0], ord("a"): [0, -1], ord("d"): [0, 1]}
 
         # keep track of directions
-        dir = moves.get(key) or self.dir
+        dir = KEY_MAP.get(key) or self.dir
 
         # dont allow backtracking
         if plus(dir, self.dir) == [0, 0]: dir = self.dir
@@ -59,6 +61,8 @@ class Snake:
 
 class Apple:
     def __init__(self, board, char = 'o', points = 1, action = None):
+
+        # generate spawn position without overlap with other elements
         pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
         while pos in (board.snake.tail + [board.snake.head] + [elt.pos for elt in board.apples]):
             pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
@@ -90,12 +94,14 @@ class Board:
             ['⬤', 3, ("set_pause", -0.035)],
             ['◯', 2, ("set_pause", 0.025)]]
 
+        # generate initial apples
         for i in range(3):
             self.apples.append(Apple(self, *self.apple_types[i]))
 
     def render(self):
         screen = np.full((self.l, self.w), [' '], dtype=str)
 
+        # render the walls
         wall_char = self.wall_chars[0], self.wall_chars[1], self.wall_chars[2] 
         if self.is_periodic:
             wall_char = self.wall_chars[3], self.wall_chars[4], self.wall_chars[5]
@@ -105,11 +111,31 @@ class Board:
         screen[0, 1:(self.w-1)] = np.repeat([wall_char[1]], self.w-2)
         screen[-1, 1:(self.w-1)] = np.repeat([wall_char[2]], self.w-2)
 
+        # render the player and apples
         self.snake.render(screen)
         for elt in self.apples:
             elt.render(screen)
     
         return "\n".join(["".join(elt) for elt in screen.tolist()])
+
+    def collect_apple(self, pos):
+        # extend the snake
+        self.snake.extend(self.apples[pos].points)
+
+        # apply action specific to the apple
+        getattr(self, self.apples[pos].action)(self.apples[pos].action_args)
+        self.apples.pop(pos)
+
+        # increment total score
+        self.points += 1
+        
+        # generate new apple
+        apple_params = self.apple_types[np.random.randint(0, len(self.apple_types))]
+        self.apples.append(Apple(self, *apple_params))
+
+        return 0, None
+
+    # convenience functions to change attributes of the board
 
     def set_pause(self, *args):
         self.pause = clamp(self.pause + args[0], 0.05, 0.3)
@@ -119,14 +145,3 @@ class Board:
 
     def do_nothing(self, *args):
         pass
-
-    def remove_apple(self, pos):
-        self.snake.extend(self.apples[pos].points)
-        getattr(self, self.apples[pos].action)(self.apples[pos].action_args)
-        self.apples.pop(pos)
-        self.points += 1
-        
-        apple_params = self.apple_types[np.random.randint(0, len(self.apple_types))]
-        self.apples.append(Apple(self, *apple_params))
-
-        return 0, None

@@ -27,7 +27,7 @@ def main(stdscr):
             stdscr.addstr(str(board.points))
             break
         elif status == 1:
-            board.remove_apple(val)
+            board.collect_apple(val)
 
         stdscr.addstr(board.render())
         stdscr.addstr(str(board.points))
