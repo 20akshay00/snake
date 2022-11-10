@@ -56,7 +56,7 @@ class Snake:
         screen[tuple(zip(*([self.head] + self.tail)))] = np.repeat([self.char], len(self.tail) + 1)
 
 class Apple:
-    def __init__(self, board, char = '◯', points = 1):
+    def __init__(self, board, char = '⭕', points = 1, action = None):
         pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
         while pos in (board.snake.tail + [board.snake.head] + [elt.pos for elt in board.apples]):
             pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
@@ -64,6 +64,9 @@ class Apple:
         self.pos = pos
         self.char = char
         self.points = points
+
+        self.action = "do_nothing" if action is None else action[0]
+        self.action_args = None if action is None else action[1]
 
     def render(self, screen):
         screen[tuple(self.pos)] = self.char
@@ -80,7 +83,10 @@ class Board:
         self.apples = []
         self.apples.append(Apple(self))
         
-        self.apple_types = [['⭕', 1], ['⭕', 2], ['⬤', 3]]
+        self.apple_types = [
+            ['⭕', 1, ("toggle_boundary", None)], 
+            ['⭕', 2, ("toggle_boundary", None)], 
+            ['⬤', 3, ("set_pause", 0.1)]]
 
     def render(self):
         screen = np.full((self.l, self.w), [' '], dtype=str)
@@ -100,14 +106,18 @@ class Board:
     
         return "\n".join(["".join(elt) for elt in screen.tolist()])
 
-    def set_pause(self, **kwargs):
-        self.pause = kwargs["pause"]
+    def set_pause(self, *args):
+        self.pause = args[0]
 
-    def toggle_boundary(self, **kwargs):
+    def toggle_boundary(self, *args):
         self.is_periodic = ~self.is_periodic
+
+    def do_nothing(self, *args):
+        pass
 
     def remove_apple(self, pos):
         self.snake.extend(self.apples[pos].points)
+        getattr(self, self.apples[pos].action)(self.apples[pos].action_args)
         self.apples.pop(pos)
 
         apple_params = self.apple_types[np.random.randint(1, len(self.apple_types))]
