@@ -72,7 +72,9 @@ class Board:
     def __init__(self, l, w, pause = 0.15):
         self.l, self.w = l, w
         self.pause = pause
+
         self.is_periodic = False
+        self.wall_chars = ["█", "▄", "▀", "║", "═", "═"]
 
         self.snake = Snake()
         self.apples = []
@@ -83,11 +85,14 @@ class Board:
     def render(self):
         screen = np.full((self.l, self.w), [' '], dtype=str)
 
-        if not self.is_periodic:
-            screen[1:(self.l-1), 0] = np.repeat(["│"], self.l-2)
-            screen[1:(self.l-1), -1] = np.repeat(["│"], self.l-2)
-            screen[0, 1:(self.w-1)] = np.repeat(["─"], self.w-2)
-            screen[-1, 1:(self.w-1)] = np.repeat(["─"], self.w-2)
+        wall_char = self.wall_chars[0], self.wall_chars[1], self.wall_chars[2] 
+        if self.is_periodic:
+            wall_char = self.wall_chars[3], self.wall_chars[4], self.wall_chars[5]
+        
+        screen[1:(self.l-1), 0] = np.repeat([wall_char[0]], self.l-2)
+        screen[1:(self.l-1), -1] = np.repeat([wall_char[0]], self.l-2)
+        screen[0, 1:(self.w-1)] = np.repeat([wall_char[1]], self.w-2)
+        screen[-1, 1:(self.w-1)] = np.repeat([wall_char[2]], self.w-2)
 
         self.snake.render(screen)
         for elt in self.apples:

@@ -9,7 +9,7 @@ def main(stdscr):
     stdscr.nodelay(True)
     # curses.curs_set(0)
 
-    l, w = 20, 50
+    l, w = 20, 70
     board = Board(l, w)
 
     # game loop
