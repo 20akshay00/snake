@@ -7,11 +7,12 @@ import numpy as np
 def main(stdscr):
     # curses config
     stdscr.clear()
-    stdscr.nodelay(True)
 
     l, w = 20, 80
     board = Board(l, w, 0.12)
-    end_message = generate_msg(l, w)
+    stdscr.addstr(generate_msg("start",l, w))
+    stdscr.getch()
+    stdscr.nodelay(True)
 
     # game loop
     while(True):
@@ -22,7 +23,8 @@ def main(stdscr):
         status, val = board.snake.move(key, board)
 
         if status == -1:
-            stdscr.addstr(end_message)
+            stdscr.addstr(generate_msg("end", l, w))
+            stdscr.addstr(str(board.points))
             break
         elif status == 1:
             board.remove_apple(val)
@@ -37,8 +39,18 @@ def main(stdscr):
     stdscr.refresh()
     key = stdscr.getch()
 
-def generate_msg(l, w):
-    raw = """ #####     #    #     # #######    ####### #     # ####### ######  
+def generate_msg(code, l, w):
+
+    if code == "start":
+         raw = """ #####  #     #    #    #    # ####### 
+#     # ##    #   # #   #   #  #       
+#       # #   #  #   #  #  #   #       
+ #####  #  #  # #     # ###    #####   
+      # #   # # ####### #  #   #       
+#     # #    ## #     # #   #  #       
+ #####  #     # #     # #    # ####### """
+    else:
+        raw = """ #####     #    #     # #######    ####### #     # ####### ######  
 #     #   # #   ##   ## #          #     # #     # #       #     # 
 #        #   #  # # # # #          #     # #     # #       #     # 
 #  #### #     # #  #  # #####      #     # #     # #####   ######  

@@ -83,14 +83,15 @@ class Board:
         self.wall_chars = ["█", "▄", "▀", "║", "═", "═"]
 
         self.snake = Snake()
-        self.apples = []
-        self.apples.append(Apple(self))
-        
+        self.apples = []        
         self.apple_types = [
             ['o', 1], 
             ['¤', 2, ("toggle_boundary", None)], 
             ['⬤', 3, ("set_pause", -0.035)],
             ['◯', 2, ("set_pause", 0.025)]]
+
+        for i in range(3):
+            self.apples.append(Apple(self, *self.apple_types[i]))
 
     def render(self):
         screen = np.full((self.l, self.w), [' '], dtype=str)
