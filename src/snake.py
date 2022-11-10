@@ -27,7 +27,15 @@ class Snake:
 
         # shift the snake
         self.tail.append(self.head)
-        self.head = [(self.head[0] + dir[0]) % board.l, (self.head[1] + dir[1]) % board.w]
+        if board.is_periodic:
+            self.head = [(self.head[0] + dir[0]) % board.l, (self.head[1] + dir[1]) % board.w]
+        else:
+            self.head = plus(self.head, dir)
+
+            # wall collision signal
+            if self.head[0] == 0 or self.head[0] == board.l - 1 or self.head[1] == 0 or self.head[1] == board.w - 1:
+                return -1, None
+
         self.tail.pop(0)
 
         # self collision signal
@@ -64,6 +72,7 @@ class Board:
     def __init__(self, l, w, pause = 0.15):
         self.l, self.w = l, w
         self.pause = pause
+        self.is_periodic = False
 
         self.snake = Snake()
         self.apples = []
@@ -73,16 +82,24 @@ class Board:
 
     def render(self):
         screen = np.full((self.l, self.w), [' '], dtype=str)
-        screen[1:(self.l-1), 0] = np.repeat(["│"], self.l-2)
-        screen[1:(self.l-1), -1] = np.repeat(["│"], self.l-2)
-        screen[0, 1:(self.w-1)] = np.repeat(["─"], self.w-2)
-        screen[-1, 1:(self.w-1)] = np.repeat(["─"], self.w-2)
+
+        if not self.is_periodic:
+            screen[1:(self.l-1), 0] = np.repeat(["│"], self.l-2)
+            screen[1:(self.l-1), -1] = np.repeat(["│"], self.l-2)
+            screen[0, 1:(self.w-1)] = np.repeat(["─"], self.w-2)
+            screen[-1, 1:(self.w-1)] = np.repeat(["─"], self.w-2)
 
         self.snake.render(screen)
         for elt in self.apples:
             elt.render(screen)
     
         return "\n".join(["".join(elt) for elt in screen.tolist()])
+
+    def set_pause(self, **kwargs):
+        self.pause = kwargs["pause"]
+
+    def toggle_boundary(self, **kwargs):
+        self.is_periodic = ~self.is_periodic
 
     def remove_apple(self, pos):
         self.snake.extend(self.apples[pos].points)
