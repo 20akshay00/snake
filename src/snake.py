@@ -4,6 +4,8 @@ import curses
 def plus(l1, l2):
     return [l1[0] + l2[0], l1[1] + l2[1]]
 
+def clamp(n, smallest, largest): return max(smallest, min(n, largest)) 
+
 class Snake:
     def __init__(self, len = 3):
         self.head = [7, 7]
@@ -22,7 +24,7 @@ class Snake:
         dir = moves.get(key) or self.dir
 
         # dont allow backtracking
-        if dir == [-self.dir[0], -self.dir[1]]: dir = self.dir
+        if plus(dir, self.dir) == [0, 0]: dir = self.dir
         self.dir = dir
 
         # shift the snake
@@ -56,7 +58,7 @@ class Snake:
         screen[tuple(zip(*([self.head] + self.tail)))] = np.repeat([self.char], len(self.tail) + 1)
 
 class Apple:
-    def __init__(self, board, char = '⭕', points = 1, action = None):
+    def __init__(self, board, char = 'o', points = 1, action = None):
         pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
         while pos in (board.snake.tail + [board.snake.head] + [elt.pos for elt in board.apples]):
             pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
@@ -75,6 +77,7 @@ class Board:
     def __init__(self, l, w, pause = 0.15):
         self.l, self.w = l, w
         self.pause = pause
+        self.points = 0
 
         self.is_periodic = False
         self.wall_chars = ["█", "▄", "▀", "║", "═", "═"]
@@ -84,9 +87,10 @@ class Board:
         self.apples.append(Apple(self))
         
         self.apple_types = [
-            ['⭕', 1, ("toggle_boundary", None)], 
-            ['⭕', 2, ("toggle_boundary", None)], 
-            ['⬤', 3, ("set_pause", 0.1)]]
+            ['o', 1], 
+            ['¤', 2, ("toggle_boundary", None)], 
+            ['⬤', 3, ("set_pause", -0.035)],
+            ['◯', 2, ("set_pause", 0.025)]]
 
     def render(self):
         screen = np.full((self.l, self.w), [' '], dtype=str)
@@ -107,7 +111,7 @@ class Board:
         return "\n".join(["".join(elt) for elt in screen.tolist()])
 
     def set_pause(self, *args):
-        self.pause = args[0]
+        self.pause = clamp(self.pause + args[0], 0.05, 0.3)
 
     def toggle_boundary(self, *args):
         self.is_periodic = ~self.is_periodic
@@ -119,8 +123,9 @@ class Board:
         self.snake.extend(self.apples[pos].points)
         getattr(self, self.apples[pos].action)(self.apples[pos].action_args)
         self.apples.pop(pos)
-
-        apple_params = self.apple_types[np.random.randint(1, len(self.apple_types))]
+        self.points += 1
+        
+        apple_params = self.apple_types[np.random.randint(0, len(self.apple_types))]
         self.apples.append(Apple(self, *apple_params))
 
         return 0, None
