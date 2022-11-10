@@ -4,14 +4,15 @@ from snake import Snake, Apple, Board
 from time import sleep
 
 def main(stdscr):
-    # Clear screen
+    # curses config
     stdscr.clear()
     stdscr.nodelay(True)
+    # curses.curs_set(0)
 
     l, w = 20, 50
     board = Board(l, w)
 
-    # This raises ZeroDivisionError when i == 10.
+    # game loop
     while(True):
         key = stdscr.getch()
         stdscr.erase()
@@ -27,7 +28,7 @@ def main(stdscr):
         stdscr.addstr(board.render())
 
         stdscr.refresh()
-        sleep(0.15)
+        sleep(board.pause)
 
     stdscr.nodelay(False)
     stdscr.refresh()

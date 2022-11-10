@@ -40,30 +40,36 @@ class Snake:
         # uneventful move signal
         return 0, None
 
-    def extend(self):
-        self.tail.append(self.tail[-1] + self.dir)
+    def extend(self, point):
+        for i in range(point):
+            self.tail.append(self.tail[-1] + self.dir)
 
     def render(self, screen):
         screen[tuple(zip(*([self.head] + self.tail)))] = np.repeat([self.char], len(self.tail) + 1)
 
 class Apple:
-    def __init__(self, board):
+    def __init__(self, board, char = '◯', points = 1):
         pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
         while pos in (board.snake.tail + [board.snake.head] + [elt.pos for elt in board.apples]):
             pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
 
         self.pos = pos
-        self.char = '◯'
+        self.char = char
+        self.points = points
 
     def render(self, screen):
         screen[tuple(self.pos)] = self.char
 
 class Board:
-    def __init__(self, l, w):
+    def __init__(self, l, w, pause = 0.15):
         self.l, self.w = l, w
+        self.pause = pause
+
         self.snake = Snake()
         self.apples = []
         self.apples.append(Apple(self))
+        
+        self.apple_types = [['⭕', 1], ['⭕', 2], ['⬤', 3]]
 
     def render(self):
         screen = np.full((self.l, self.w), [' '], dtype=str)
@@ -79,8 +85,10 @@ class Board:
         return "\n".join(["".join(elt) for elt in screen.tolist()])
 
     def remove_apple(self, pos):
+        self.snake.extend(self.apples[pos].points)
         self.apples.pop(pos)
-        self.snake.extend()
-        self.apples.append(Apple(self))
+
+        apple_params = self.apple_types[np.random.randint(1, len(self.apple_types))]
+        self.apples.append(Apple(self, *apple_params))
 
         return 0, None
