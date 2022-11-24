@@ -1,6 +1,6 @@
 import curses
 from curses import wrapper
-from snake import Snake, Apple, Board
+from snake import Board
 from time import sleep
 import numpy as np
 

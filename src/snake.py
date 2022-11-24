@@ -1,5 +1,4 @@
 import numpy as np
-import curses
 
 KEY_MAP = {ord("w"): [-1, 0], ord("s"): [1, 0], ord("a"): [0, -1], ord("d"): [0, 1]}
 
