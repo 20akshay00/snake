@@ -8,13 +8,13 @@ def plus(l1, l2):
 def clamp(n, smallest, largest): return max(smallest, min(n, largest)) 
 
 class Snake:
-    def __init__(self, len = 3):
-        self.dir = [1, 0]
-        
+    def __init__(self, len = 3):        
         # generate initial snake tail
         self.tail = [[7, 7]]
+        self.dir = [0, 1]
+
         for i in range(len):
-            self.tail.append(plus(self.tail[-1], [-1, 0]))
+            self.tail.append(plus(self.tail[-1], [0, -1]))
 
         self.char = '▖'
 
