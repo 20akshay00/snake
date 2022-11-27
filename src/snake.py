@@ -9,13 +9,12 @@ def clamp(n, smallest, largest): return max(smallest, min(n, largest))
 
 class Snake:
     def __init__(self, len = 3):
-        self.head = [7, 7]
         self.dir = [1, 0]
         
         # generate initial snake tail
-        self.tail = [plus(self.head, self.dir)]
-        for i in range(len - 1):
-            self.tail.append(plus(self.tail[-1], self.dir))
+        self.tail = [[7, 7]]
+        for i in range(len):
+            self.tail.append(plus(self.tail[-1], [-1, 0]))
 
         self.char = '▖'
 
@@ -29,43 +28,42 @@ class Snake:
         self.dir = dir
 
         # shift the snake
-        self.tail.append(self.head)
         if board.is_periodic:
-            self.head = [(self.head[0] + dir[0]) % board.l, (self.head[1] + dir[1]) % board.w]
+            head = [(self.tail[0][0] + dir[0]) % board.l, (self.tail[0][1] + dir[1]) % board.w]
         else:
-            self.head = plus(self.head, dir)
+            head = plus(self.tail[0], dir)
 
             # wall collision signal
-            if self.head[0] == 0 or self.head[0] == board.l - 1 or self.head[1] == 0 or self.head[1] == board.w - 1:
+            if head[0] == 0 or head[0] == board.l - 1 or head[1] == 0 or head[1] == board.w - 1:
                 return -1, None
 
-        self.tail.pop(0)
+        # update the snake
+        self.tail.insert(0, head)
+        self.tail.pop()
 
         # self collision signal
-        if(self.head in self.tail): return -1, None
+        if(head in self.tail[1:]): return -1, None
 
         # object collision signal
         for i, elt in enumerate(board.apples):
-            if(self.head == elt.pos): return 1, i
+            if(head == elt.pos): return 1, i
 
         # uneventful move signal
         return 0, None
 
     def extend(self, point):
         for i in range(point):
-            self.tail.append(plus(self.tail[-1], self.dir))
-
-        self.head = self.tail[-1]
+            self.tail = [plus(self.tail[0], self.dir)] + self.tail
 
     def render(self, screen):
-        screen[tuple(zip(*([self.head] + self.tail)))] = np.repeat([self.char], len(self.tail) + 1)
+        screen[tuple(zip(*self.tail))] = np.repeat([self.char], len(self.tail))
 
 class Apple:
     def __init__(self, board, char = 'o', points = 1, action = None):
 
         # generate spawn position without overlap with other elements
         pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
-        while pos in (board.snake.tail + [board.snake.head] + [elt.pos for elt in board.apples]):
+        while pos in (board.snake.tail + [elt.pos for elt in board.apples]):
             pos = [np.random.randint(1, board.l-2), np.random.randint(1, board.w-2)]
 
         self.pos = pos
@@ -92,7 +90,7 @@ class Board:
         self.apple_types = [
             ['o', 1], 
             ['¤', 2, ("toggle_boundary", None)], 
-            ['⬤', 3, ("set_pause", -0.035)],
+            ['⬤', 0, ("set_pause", -0.035)],
             ['◯', 2, ("set_pause", 0.025)]]
 
         # generate initial apples

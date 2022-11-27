@@ -39,6 +39,8 @@ def main(stdscr):
     stdscr.refresh()
     key = stdscr.getch()
 
+    return board.points, len(board.snake.tail)
+
 def generate_msg(code, l, w):
 
     if code == "start":
@@ -72,4 +74,5 @@ def generate_msg(code, l, w):
 
     return "\n".join(["".join(elt) for elt in msg.tolist()])
 
-wrapper(main)
+score, length = wrapper(main)
+print(f"You ate {score} apples and died at the ripe length of {length}.")
