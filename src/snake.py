@@ -53,7 +53,9 @@ class Snake:
 
     def extend(self, point):
         for i in range(point):
-            self.tail.append(self.tail[-1] + self.dir)
+            self.tail.append(plus(self.tail[-1], self.dir))
+
+        self.head = self.tail[-1]
 
     def render(self, screen):
         screen[tuple(zip(*([self.head] + self.tail)))] = np.repeat([self.char], len(self.tail) + 1)
